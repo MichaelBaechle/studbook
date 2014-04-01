@@ -1,0 +1,163 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>Studbook: Social Networking for Dogs</title>
+        <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/static/site.css" rel="stylesheet">
+        <link href="//cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/0.9.9/magnific-popup.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+          <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+          <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+    </head>
+    <body>
+        <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <a class="navbar-brand" href="#">Studbook</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main jumbotron for a primary marketing message or call to action -->
+        <div class="container">
+            <div class="row">
+                <div id="welcome" class="img-rounded jumbotron col-md-offset-2 col-xs-12 col-md-8">
+                    <h1>Welcome, dog lovers!</h1>
+                        <p>Studbook is an exciting new social network catering especially to:</p>
+                        <ul>
+                           <li>owners</li>
+                           <li>breeders</li>
+                           <li>pet enthusiasts</li>
+                        </ul>
+                        <p>Waste no time in making sure everyone knows your perdigree'd puppy is ready to meet new friends.</p>
+                    <div>
+                        <form method="POST" action="/new" enctype="multipart/form-data">
+                            <div class="form-group">
+                              <input type="text" id="new_dog_name" name="new_dog_name" placeholder="dog's name" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <input id="new_dog_pic" name="new_dog_pic" type="file" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="new_owner_name" name="new_owner_name" placeholder="owner's name" class="form-control" />
+                            </div>
+                            <p class="text-center"><button type="submit" name="add" value="Add" class="btn btn-success">Join our community!</button></p>
+                            {% csrf_token %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="stud-list" class="container">
+            <div class="row">
+                <h1>
+                    <span class="search pull-right form-inline">
+                        <input id="dog_search" type="text" placeholder="dog search" class="form-control">
+                        <input id="owner_search" type="text" placeholder="owner search" class="form-control">
+                    </span>
+                    {{ studs|length }} members
+                </h1>
+            </div>
+            {% for stud in studs.values %}
+                <div id="stud_{{ stud.id }}" class="stud col-xs-4 col-md-3">
+                    <ul class="list-group">
+                        <li class="dog_name list-group-item "><span>{{ stud.dog_name }}</span></li>
+                        <li class="dog_pic list-group-item">
+                            <a  class="thumb"
+                                title="{{ stud.dog_name }}, <i>owner</i>: {{ stud.owner_name }}"
+                                href="/media/{{ stud.dog_pic }}">
+                                <img alt="" src="{{ stud.dog_pic_thumb }}">
+                            </a>
+                        </li>
+                        <li class="owner_name list-group-item"><small><i>submitted by:</i> </small><span>{{ stud.owner_name }}</span></li>
+                    </ul>
+                </div>
+            {% endfor %}
+        </div>
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+        <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/0.9.9/jquery.magnific-popup.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.11.1/jquery.validate.min.js"></script>
+        <script>
+            $('a.thumb').magnificPopup({
+              type: 'image',
+              gallery:{
+                enabled:true
+              }
+            });
+            $('.search input').keyup(function(){
+                var studs = $('.stud');
+                var dog = $('#dog_search').val().toLowerCase();
+                var owner = $('#owner_search').val().toLowerCase();
+
+                $.each(studs, function(key, stud){
+                    var stud = $(stud)
+                    var stud_dog = stud.find('.dog_name span').text().toLowerCase();
+                    var stud_owner = stud.find('.owner_name span').text().toLowerCase();
+
+                    if(stud_dog.search(dog) != '-1' &&
+                        stud_owner.search(owner) != -1){
+                        stud.show();
+
+                    } else {
+                        stud.hide();
+                    }
+
+                    $('a.thumb:visible').magnificPopup({
+                      type: 'image',
+                      gallery:{
+                        enabled:true
+                      }
+                    });
+                });
+            });
+
+            $('form').validate({
+                rules: {
+                    new_dog_name: {
+                        minlength: 3,
+                        maxlength: 30,
+                        required: true
+                    },
+                    new_owner_name: {
+                        minlength: 3,
+                        maxlength: 30,
+                        required: true
+                    },
+                    new_dog_pic: {
+                        required: true
+                    }
+                },
+                highlight: function(element) {
+                    $(element).closest('.form-group').addClass('has-error');
+                },
+                unhighlight: function(element) {
+                    $(element).closest('.form-group').removeClass('has-error');
+                }
+            });
+
+            $.validator.setDefaults({
+                highlight: function(element) {
+                    $(element).closest('.form-group').addClass('has-error');
+                },
+                unhighlight: function(element) {
+                    $(element).closest('.form-group').removeClass('has-error');
+                },
+                errorElement: 'span',
+                errorClass: 'help-block',
+                errorPlacement: function(error, element) {
+                    if(element.parent('.input-group').length) {
+                        error.insertAfter(element.parent());
+                    } else {
+                        error.insertAfter(element);
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>
